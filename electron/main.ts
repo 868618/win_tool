@@ -31,6 +31,9 @@ function createWindow() {
 
   win.webContents.openDevTools();
 
+  // windows隐藏默认菜单栏
+  win.setMenuBarVisibility(false);
+
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
