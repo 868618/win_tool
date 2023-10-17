@@ -19,7 +19,7 @@ function withPrototype(obj: Record<string, any>) {
       obj[key] = value;
     }
   }
-  console.log("AT-[ obj &&&&&********** ]", obj);
+  // console.log("AT-[ obj &&&&&********** ]", obj);
   return obj;
 }
 
@@ -111,6 +111,7 @@ function useLoading() {
 // ----------------------------------------------------------------------
 
 const { appendLoading, removeLoading } = useLoading();
+
 domReady().then(appendLoading);
 
 window.onmessage = (ev) => {

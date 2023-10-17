@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 
 // The built directory structure
 //
@@ -27,12 +28,13 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
+    autoHideMenuBar: true,
   });
 
   win.webContents.openDevTools();
 
   // windows隐藏默认菜单栏
-  win.setMenuBarVisibility(false);
+  // win.setMenuBarVisibility(false);
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
@@ -65,4 +67,46 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(createWindow);
+app
+  .whenReady()
+  .then(() => {
+    const getWlans = () => {
+      const res = spawnSync("netsh", ["interface", "show", "interface"], {
+        shell: process.env.ComSpec,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+
+      const str = res.stdout.toString();
+
+      const lines = str.split("\n");
+      const data = [];
+
+      // Skip the first two lines (headers) and start from the third line
+      for (let i = 2; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line) {
+          const [adminState, state, type, interfaceName] = line.split(/\s+/);
+          data.push({
+            state: adminState,
+            State: state,
+            Type: type,
+            name: interfaceName,
+          });
+        }
+      }
+      return data.slice(1);
+    };
+
+    ipcMain.handle("getWlans", getWlans);
+
+    ipcMain.handle("checkIps", () => {
+      return;
+    });
+
+    ipcMain.handle("init", () => {
+      win?.webContents.send("init", "init");
+    });
+
+    return;
+  })
+  .then(createWindow);
